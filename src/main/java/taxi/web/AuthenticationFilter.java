@@ -14,30 +14,28 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-@WebFilter("/*")
+@WebFilter(urlPatterns = "/*")
 public class AuthenticationFilter implements Filter {
-    private static final String ID = "driver_id";
-    private Set<String> urlsAllowed;
+    private static final String SESSION_ATTRIBUTE_DRIVER_ID = "driver_id";
+    private final Set<String> allowedUrls = new HashSet<>();
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-        urlsAllowed = new HashSet<>();
-        urlsAllowed.add("/login");
-        urlsAllowed.add("/drivers/add");
+    public void init(FilterConfig filterConfig) {
+        allowedUrls.add("/login");
+        allowedUrls.add("/registration");
     }
 
     @Override
-    public void doFilter(ServletRequest servletRequest,
-                         ServletResponse servletResponse, FilterChain filterChain)
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        HttpServletRequest req = (HttpServletRequest) servletRequest;
-        HttpServletResponse resp = (HttpServletResponse) servletResponse;
+        HttpServletRequest req = (HttpServletRequest) request;
+        HttpServletResponse resp = (HttpServletResponse) response;
         HttpSession session = req.getSession();
-        Long driverId = (Long) session.getAttribute(ID);
-        if (driverId == null && !urlsAllowed.contains(req.getServletPath())) {
+        Long driverId = (Long) session.getAttribute(SESSION_ATTRIBUTE_DRIVER_ID);
+        if (driverId == null && !allowedUrls.contains(req.getServletPath())) {
             resp.sendRedirect("/login");
             return;
         }
-        filterChain.doFilter(req, resp);
+        chain.doFilter(request, response);
     }
 }
